@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Property Listing Generator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Georgia, serif; background: #F7F5F0; color: #1A1A2E; min-height: 100vh; }
+    header { background: #1A1A2E; padding: 20px; display: flex; align-items: center; gap: 12px; border-bottom: 3px solid #C8A96E; }
+    .logo { width: 40px; height: 40px; background: #C8A96E; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    header .sub { color: #C8A96E; font-family: sans-serif; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; }
+    header h1 { color: #fff; font-size: 18px; }
+    main { max-width: 960px; margin: 0 auto; padding: 30px 16px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media(max-width:650px){ .grid { grid-template-columns: 1fr; } }
+    .card { background: #fff; border-radius: 8px; padding: 24px; border: 1px solid #E5E0D8; }
+    .card-title { font-family: sans-serif; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #C8A96E; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #E5E0D8; }
+    .field { margin-bottom: 14px; }
+    label { display: block; font-family: sans-serif; font-size: 12px; font-weight: 600; color: #6B7280; margin-bottom: 5px; }
+    input, select, textarea { width: 100%; padding: 10px 12px; border: 1px solid #E5E0D8; border-radius: 6px; font-size: 15px; font-family: Georgia, serif; color: #1A1A2E; background: #F7F5F0; outline: none; }
+    textarea { resize: vertical; min-height: 75px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .tone-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 6px; }
+    .tone-btn { padding: 10px 4px; border: 1px solid #E5E0D8; border-radius: 6px; font-size: 13px; font-family: sans-serif; font-weight: 600; cursor: pointer; background: #F7F5F0; color: #6B7280; text-align: center; }
+    .tone-btn.active { background: #1A1A2E; color: #C8A96E; border-color: #1A1A2E; }
+    .gen-btn { width: 100%; padding: 15px; background: #C8A96E; color: #1A1A2E; border: none; border-radius: 6px; font-size: 14px; font-family: sans-serif; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; margin-top: 10px; }
+    .gen-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .output-card { grid-column: 1 / -1; background: #fff; border-radius: 8px; padding: 24px; border: 1px solid #E5E0D8; margin-top: 4px; }
+    .output-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid #E5E0D8; }
+    .copy-btn { padding: 8px 16px; background: transparent; color: #1A1A2E; border: 1px solid #E5E0D8; border-radius: 6px; font-size: 13px; font-family: sans-serif; font-weight: 600; cursor: pointer; }
+    .badge { background: #EEF9F0; color: #2D7A3A; border: 1px solid #B8E5BE; border-radius: 20px; padding: 3px 12px; font-size: 12px; font-family: sans-serif; font-weight: 600; margin-left: 8px; }
+    #output-text { font-size: 16px; line-height: 1.85; color: #1A1A2E; white-space: pre-wrap; display: block; width: 100%; padding: 4px 0; }
+    .loading { display: flex; align-items: center; gap: 10px; color: #6B7280; font-family: sans-serif; font-size: 14px; padding: 10px 0; }
+    .spinner { width: 18px; height: 18px; border: 2px solid #E5E0D8; border-top-color: #C8A96E; border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error-box { background: #FFF5F5; border: 1px solid #FEB2B2; border-radius: 6px; padding: 12px; color: #C53030; font-family: sans-serif; font-size: 13px; margin-top: 10px; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+<header>
+  <div class="logo">&#127968;</div>
+  <div>
+    <p class="sub">AI-Powered</p>
+    <h1>Property Listing Generator</h1>
+  </div>
+</header>
+<main>
+  <div class="grid">
+    <div class="card">
+      <p class="card-title">Property Details</p>
+      <div class="field"><label>Property Address *</label><input id="address" type="text" placeholder="e.g. 42 Maple Street, Austin TX" /></div>
+      <div class="row">
+        <div class="field"><label>Asking Price</label><input id="price" type="text" placeholder="e.g. 850,000" /></div>
+        <div class="field"><label>Property Type</label><select id="propType"><option>House</option><option>Apartment / Condo</option><option>Townhouse</option><option>Villa</option><option>Land</option><option>Commercial</option></select></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Bedrooms *</label><input id="beds" type="number" min="0" placeholder="4" /></div>
+        <div class="field"><label>Bathrooms *</label><input id="baths" type="number" min="0" placeholder="2" /></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Parking Spaces</label><input id="parking" type="number" min="0" placeholder="2" /></div>
+        <div class="field"><label>Land Size</label><input id="land" type="text" placeholder="e.g. 600 sqm" /></div>
+      </div>
+      <div class="field"><label>Interior Size</label><input id="interior" type="text" placeholder="e.g. 2,400 sq ft" /></div>
+    </div>
+    <div class="card">
+      <p class="card-title">Features and Style</p>
+      <div class="field"><label>Key Features</label><textarea id="features" placeholder="e.g. Pool, renovated kitchen, hardwood floors..."></textarea></div>
+      <div class="field"><label>Neighborhood Highlights</label><textarea id="neighborhood" placeholder="e.g. Walking distance to schools, 5 mins to downtown..."></textarea></div>
+      <div class="field"><label>Anything Else</label><input id="extras" type="text" placeholder="e.g. Motivated seller, move-in ready..." /></div>
+      <div class="field">
+        <label>Listing Tone</label>
+        <div class="tone-row">
+          <button class="tone-btn active" data-tone="Luxury" onclick="setTone(this)">Luxury</button>
+          <button class="tone-btn" data-tone="Friendly" onclick="setTone(this)">Friendly</button>
+          <button class="tone-btn" data-tone="Investment" onclick="setTone(this)">Investment</button>
+        </div>
+      </div>
+      <div id="error-box" class="error-box hidden"></div>
+      <button class="gen-btn" id="gen-btn" onclick="generate()">Generate Listing</button>
+    </div>
+    <div class="output-card" id="output-card">
+      <div class="output-header">
+        <div>
+          <span style="font-family:sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#C8A96E;">Generated Listing</span>
+          <span class="badge hidden" id="ready-badge">Ready to use</span>
+        </div>
+        <button class="copy-btn hidden" id="copy-btn" onclick="copyText()">Copy Text</button>
+      </div>
+      <div class="loading hidden" id="loading-indicator"><div class="spinner"></div><span>Writing your listing...</span></div>
+      <div id="output-text"></div>
+    </div>
+  </div>
+</main>
+<script>
+  var selectedTone = "Luxury";
+  function setTone(btn) {
+    document.querySelectorAll(".tone-btn").forEach(function(b){ b.classList.remove("active"); });
+    btn.classList.add("active");
+    selectedTone = btn.getAttribute("data-tone");
+  }
+  function showError(msg) {
+    var box = document.getElementById("error-box");
+    box.textContent = msg;
+    box.classList.remove("hidden");
+  }
+  function hideError() { document.getElementById("error-box").classList.add("hidden"); }
+  function generate() {
+    var address = document.getElementById("address").value.trim();
+    var beds = document.getElementById("beds").value.trim();
+    var baths = document.getElementById("baths").value.trim();
+    hideError();
+    if (!address || !beds || !baths) { showError("Please fill in Address, Bedrooms, and Bathrooms."); return; }
+    var btn = document.getElementById("gen-btn");
+    btn.disabled = true;
+    btn.textContent = "Generating...";
+    var loading = document.getElementById("loading-indicator");
+    var outputEl = document.getElementById("output-text");
+    var readyBadge = document.getElementById("ready-badge");
+    var copyBtn = document.getElementById("copy-btn");
+    loading.classList.remove("hidden");
+    outputEl.textContent = "";
+    readyBadge.classList.add("hidden");
+    copyBtn.classList.add("hidden");
+    document.getElementById("output-card").scrollIntoView({ behavior: "smooth" });
+    var price = document.getElementById("price").value;
+    var propType = document.getElementById("propType").value;
+    var parking = document.getElementById("parking").value;
+    var land = document.getElementById("land").value;
+    var interior = document.getElementById("interior").value;
+    var features = document.getElementById("features").value;
+    var neighborhood = document.getElementById("neighborhood").value;
+    var extras = document.getElementById("extras").value;
+    var prompt = "You are an expert real estate copywriter. Write a compelling property listing.\n\nAddress: " + address + "\nPrice: " + (price ? "$"+price : "Not specified") + "\nType: " + propType + "\nBeds: " + beds + "\nBaths: " + baths + "\nParking: " + (parking||"Not specified") + "\nLand: " + (land||"Not specified") + "\nInterior: " + (interior||"Not specified") + "\nFeatures: " + (features||"None") + "\nNeighborhood: " + (neighborhood||"Not specified") + "\nNotes: " + (extras||"None") + "\nTone: " + selectedTone + "\n\nWrite 3 paragraphs of flowing prose. No bullets. No headers. End with a call to action.";
+    fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "anthropic-dangerous-direct-browser-access": "true" },
+      body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 1000, messages: [{ role: "user", content: prompt }] })
+    }).then(function(res){ return res.json(); }).then(function(data){
+      loading.classList.add("hidden");
+      var text = "";
+      if (data && data.content) {
+        for (var i = 0; i < data.content.length; i++) {
+          if (data.content[i].text) text += data.content[i].text;
+        }
+      }
+      if (text && text.length > 10) {
+        outputEl.textContent = text;
+        readyBadge.classList.remove("hidden");
+        copyBtn.classList.remove("hidden");
+      } else {
+        showError("Could not generate text. Error: " + (data.error ? data.error.message : "Unknown error"));
+      }
+    }).catch(function(err){
+      loading.classList.add("hidden");
+      showError("Network error: " + err.message);
+    }).finally(function(){
+      btn.disabled = false;
+      btn.textContent = "Generate Listing";
+    });
+  }
+  function copyText() {
+    var text = document.getElementById("output-text").textContent;
+    if (!text) { alert("No text to copy!"); return; }
+    var copyBtn = document.getElementById("copy-btn");
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function(){
+        copyBtn.textContent = "Copied!";
+        setTimeout(function(){ copyBtn.textContent = "Copy Text"; }, 2000);
+      }).catch(function(){ fallbackCopy(text); });
+    } else { fallbackCopy(text); }
+  }
+  function fallbackCopy(text) {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand("copy");
+      document.getElementById("copy-btn").textContent = "Copied!";
+      setTimeout(function(){ document.getElementById("copy-btn").textContent = "Copy Text"; }, 2000);
+    } catch(e) { alert("Long-press the text and select Copy manually."); }
+    document.body.removeChild(ta);
+  }
+</script>
+</body>
+</html>
